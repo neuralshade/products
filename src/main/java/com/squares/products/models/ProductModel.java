@@ -5,9 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
+import java.time.Instant;
 
 @Entity
 @Table(name = "TB_PRODUCTS")
@@ -28,4 +31,51 @@ public class ProductModel extends RepresentationModel<ProductModel> implements S
 
     @Column(name = "product_value")
     private Float value;
+
+    @Column(name = "sku")
+    private String sku;
+
+    @Column(name = "description", length = 1000)
+    private String description;
+
+    @Column(name = "category")
+    private String category;
+
+    @Column(name = "brand")
+    private String brand;
+
+    @Column(name = "unit")
+    private String unit;
+
+    @Column(name = "stock_quantity")
+    private Integer stockQuantity;
+
+    @Column(name = "min_stock")
+    private Integer minStock;
+
+    @Column(name = "cost_price")
+    private Float costPrice;
+
+    @Column(name = "sale_price")
+    private Float salePrice;
+
+    @Column(name = "currency", length = 3)
+    private String currency;
+
+    @Column(name = "active")
+    private Boolean active;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    @Column(name = "image_url", length = 1024)
+    private String imageUrl;
+
+    @Column(name = "barcode", length = 128)
+    private String barcode;
 }

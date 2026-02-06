@@ -31,3 +31,21 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Vibe Coding ###
+explain.md
+
+### HSQLDB ###
+data/
+*.script
+*.properties
+*.data
+*.log
+*.lck
+*.backup
+
+### Env ###
+.env
+
+### OS ###
+.DS_Store

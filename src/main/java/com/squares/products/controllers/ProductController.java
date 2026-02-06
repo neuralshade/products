@@ -1,17 +1,19 @@
 package com.squares.products.controllers;
 
 import com.squares.products.dtos.ProductRecordDTO;
+import com.squares.products.exceptions.ProductNotFoundException;
 import com.squares.products.models.ProductModel;
 import com.squares.products.repositories.ProductRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -31,29 +33,28 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<List<ProductModel>> getAllProducts() {
-        List<ProductModel> productsList = this.productRepository.findAll();
+    public ResponseEntity<Page<ProductModel>> getAllProducts(Pageable pageable) {
+        Page<ProductModel> productsPage = this.productRepository.findAll(pageable)
+                .map(product -> product.add(linkTo(methodOn(ProductController.class)
+                        .getOneProduct(product.getId()))
+                        .withSelfRel()));
 
-        if (!productsList.isEmpty()) {
-            for (ProductModel product : productsList) {
-                String id = product.getId();
-                product.add(linkTo(methodOn(ProductController.class).getOneProduct(id))
-                		.withSelfRel());
-            }
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(productsList);
+        return ResponseEntity.status(HttpStatus.OK).body(productsPage);
     }
 
     @GetMapping("/products/{id}")
     public ResponseEntity<Object> getOneProduct(@PathVariable(value = "id") String productId) {
         Optional<ProductModel> product = productRepository.findById(productId);
 
-        if (product.isPresent()) {
-            ProductModel productsList = product.get().add(linkTo(methodOn(ProductController.class).getAllProducts()).withRel("Products list"));
+        if (product.isEmpty()) {
+            throw new ProductNotFoundException("Product not found.");
         }
 
-        return product.<ResponseEntity<Object>>map(productModel -> ResponseEntity.status(HttpStatus.OK).body(productModel)).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found."));
+        ProductModel productModel = product.get();
+        productModel.add(linkTo(methodOn(ProductController.class).getAllProducts(Pageable.unpaged()))
+                .withRel("products"));
+
+        return ResponseEntity.status(HttpStatus.OK).body(productModel);
     }
 
     @PutMapping("/products/{id}")
@@ -61,7 +62,7 @@ public class ProductController {
         Optional<ProductModel> product = this.productRepository.findById(id);
 
         if (product.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found.");
+            throw new ProductNotFoundException("Product not found.");
         }
 
         var productModel = product.get();
@@ -75,7 +76,7 @@ public class ProductController {
         Optional<ProductModel> product = this.productRepository.findById(productId);
 
         if (product.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found.");
+            throw new ProductNotFoundException("Product not found.");
         }
 
         this.productRepository.deleteById(productId);
