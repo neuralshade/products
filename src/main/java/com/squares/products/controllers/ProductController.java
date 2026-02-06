@@ -1,7 +1,9 @@
 package com.squares.products.controllers;
 
 import com.squares.products.dtos.ProductRecordDTO;
+import com.squares.products.dtos.ProductResponseDTO;
 import com.squares.products.exceptions.ProductNotFoundException;
+import com.squares.products.mappers.ProductMapper;
 import com.squares.products.models.ProductModel;
 import com.squares.products.repositories.ProductRepository;
 import jakarta.validation.Valid;
@@ -24,20 +26,23 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 public class ProductController {
     @Autowired
     private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
     @PostMapping("/products")
-    public ResponseEntity<ProductModel> saveProduct(@RequestBody @Valid ProductRecordDTO productRecordDTO) {
+    public ResponseEntity<ProductResponseDTO> saveProduct(@RequestBody @Valid ProductRecordDTO productRecordDTO) {
         var productModel = new ProductModel();
         BeanUtils.copyProperties(productRecordDTO, productModel);
-        return ResponseEntity.status(HttpStatus.CREATED).body(productRepository.save(productModel));
+        ProductModel saved = productRepository.save(productModel);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productMapper.toResponse(saved));
     }
 
     @GetMapping("/products")
-    public ResponseEntity<Page<ProductModel>> getAllProducts(Pageable pageable) {
-        Page<ProductModel> productsPage = this.productRepository.findAll(pageable)
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(Pageable pageable) {
+        Page<ProductResponseDTO> productsPage = this.productRepository.findAll(pageable)
                 .map(product -> product.add(linkTo(methodOn(ProductController.class)
                         .getOneProduct(product.getId()))
-                        .withSelfRel()));
+                        .withSelfRel()))
+                .map(productMapper::toResponse);
 
         return ResponseEntity.status(HttpStatus.OK).body(productsPage);
     }
@@ -54,7 +59,7 @@ public class ProductController {
         productModel.add(linkTo(methodOn(ProductController.class).getAllProducts(Pageable.unpaged()))
                 .withRel("products"));
 
-        return ResponseEntity.status(HttpStatus.OK).body(productModel);
+        return ResponseEntity.status(HttpStatus.OK).body(productMapper.toResponse(productModel));
     }
 
     @PutMapping("/products/{id}")
@@ -68,7 +73,8 @@ public class ProductController {
         var productModel = product.get();
 
         BeanUtils.copyProperties(productRecordDTO, productModel);
-        return ResponseEntity.status(HttpStatus.OK).body(productRepository.save(productModel));
+        ProductModel saved = productRepository.save(productModel);
+        return ResponseEntity.status(HttpStatus.OK).body(productMapper.toResponse(saved));
     }
 
     @DeleteMapping("/products/{id}")

@@ -42,6 +42,12 @@ class ProductControllerTest {
     @MockBean
     private ProductRepository productRepository;
 
+    @MockBean
+    private com.squares.products.mappers.ProductMapper productMapper;
+
+    @MockBean
+    private com.squares.products.mappers.ErrorMapper errorMapper;
+
     @Test
     void createsProduct() throws Exception {
         ProductModel saved = new ProductModel();
@@ -50,6 +56,27 @@ class ProductControllerTest {
         saved.setValue(2.5f);
 
         when(productRepository.save(any(ProductModel.class))).thenReturn(saved);
+        when(productMapper.toResponse(any(ProductModel.class)))
+                .thenReturn(new com.squares.products.dtos.ProductResponseDTO(
+                        "abc",
+                        "SKU-001",
+                        "Caneta",
+                        "Caneta azul",
+                        "Papelaria",
+                        "Bic",
+                        "un",
+                        10,
+                        2,
+                        1.0f,
+                        2.5f,
+                        2.5f,
+                        "BRL",
+                        true,
+                        null,
+                        null,
+                        "https://example.com/caneta.png",
+                        "7891234567890"
+                ));
 
         String body = objectMapper.writeValueAsString(new ProductInput(
                 "SKU-001",
@@ -112,6 +139,27 @@ class ProductControllerTest {
 
         Page<ProductModel> page = new PageImpl<>(List.of(model), PageRequest.of(0, 1), 1);
         when(productRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(productMapper.toResponse(any(ProductModel.class)))
+                .thenReturn(new com.squares.products.dtos.ProductResponseDTO(
+                        "1",
+                        "SKU-001",
+                        "Caderno",
+                        null,
+                        null,
+                        null,
+                        null,
+                        0,
+                        0,
+                        null,
+                        null,
+                        12.5f,
+                        "BRL",
+                        true,
+                        null,
+                        null,
+                        null,
+                        null
+                ));
 
         mockMvc.perform(get("/products?page=0&size=1"))
                 .andExpect(status().isOk());
@@ -120,6 +168,15 @@ class ProductControllerTest {
     @Test
     void returnsNotFoundWhenMissing() throws Exception {
         when(productRepository.findById(eq("missing"))).thenReturn(Optional.empty());
+        when(errorMapper.toResponse(any(com.squares.products.exceptions.ApiError.class)))
+                .thenReturn(new com.squares.products.dtos.ErrorResponseDTO(
+                        null,
+                        404,
+                        "Not Found",
+                        "Product not found.",
+                        "/products/missing",
+                        null
+                ));
 
         mockMvc.perform(get("/products/missing"))
                 .andExpect(status().isNotFound())

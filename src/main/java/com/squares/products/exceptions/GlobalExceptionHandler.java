@@ -1,5 +1,7 @@
 package com.squares.products.exceptions;
 
+import com.squares.products.dtos.ErrorResponseDTO;
+import com.squares.products.mappers.ErrorMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +17,14 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final ErrorMapper errorMapper;
+
+    public GlobalExceptionHandler(ErrorMapper errorMapper) {
+        this.errorMapper = errorMapper;
+    }
+
     @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ApiError> handleProductNotFound(ProductNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponseDTO> handleProductNotFound(ProductNotFoundException ex, HttpServletRequest request) {
         ApiError error = new ApiError(
                 Instant.now(),
                 HttpStatus.NOT_FOUND.value(),
@@ -26,11 +34,11 @@ public class GlobalExceptionHandler {
                 null
         );
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMapper.toResponse(error));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidationError(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponseDTO> handleValidationError(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
@@ -45,6 +53,6 @@ public class GlobalExceptionHandler {
                 errors
         );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMapper.toResponse(error));
     }
 }

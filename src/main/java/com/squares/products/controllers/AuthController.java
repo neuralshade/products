@@ -40,7 +40,8 @@ public class AuthController {
         userRepository.save(user);
 
         String token = jwtService.generateToken(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponse(token, "Bearer"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new AuthResponse(token, "Bearer", user.getUsername(), user.getRole().name()));
     }
 
     @PostMapping("/login")
@@ -53,6 +54,6 @@ public class AuthController {
                 .orElseThrow();
 
         String token = jwtService.generateToken(user);
-        return ResponseEntity.ok(new AuthResponse(token, "Bearer"));
+        return ResponseEntity.ok(new AuthResponse(token, "Bearer", user.getUsername(), user.getRole().name()));
     }
 }
