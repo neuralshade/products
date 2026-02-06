@@ -23,16 +23,16 @@ public class ProductModel extends RepresentationModel<ProductModel> implements S
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
+    @Column(name = "id", nullable = false)
     private String id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "product_value")
+    @Column(name = "product_value", nullable = false)
     private Float value;
 
-    @Column(name = "sku")
+    @Column(name = "sku", nullable = false, unique = true)
     private String sku;
 
     @Column(name = "description", length = 1000)
@@ -47,10 +47,10 @@ public class ProductModel extends RepresentationModel<ProductModel> implements S
     @Column(name = "unit")
     private String unit;
 
-    @Column(name = "stock_quantity")
+    @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
 
-    @Column(name = "min_stock")
+    @Column(name = "min_stock", nullable = false)
     private Integer minStock;
 
     @Column(name = "cost_price")
@@ -59,10 +59,10 @@ public class ProductModel extends RepresentationModel<ProductModel> implements S
     @Column(name = "sale_price")
     private Float salePrice;
 
-    @Column(name = "currency", length = 3)
+    @Column(name = "currency", length = 3, nullable = false)
     private String currency;
 
-    @Column(name = "active")
+    @Column(name = "active", nullable = false)
     private Boolean active;
 
     @CreationTimestamp
